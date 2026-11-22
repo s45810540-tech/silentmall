@@ -21,6 +21,32 @@ window.addEventListener('error', function(e){
 
   const Input = { keys:new Set(), jx:0, jy:0, joy:false, mag:0 };
   let mode = 'boot';
+  let currentChapter = 0;
+  const CHAPTERS = [
+    { title:'THE CLOSING SHIFT', place:'THE MAIN ATRIUM', entity:'THE LISTENER', speed:15, noise:1, key:{x:45.3,y:11.45},
+      body:'11:47 PM. You were the last employee on the rota. The shutters came down while you were in the staff corridor. Your phone has no signal. The emergency doors are locked from the outside.',
+      whisper:'A voice from the PA: “Please remain calm. The mall is not yet empty.”',
+      event:'THE LISTENER HAS HEARD YOU.' },
+    { title:'BELOW THE FOOD COURT', place:'THE SERVICE LEVEL', entity:'THE USHER', speed:13.5, noise:1.18, key:{x:32.2,y:10.8},
+      body:'The service lift opens onto a floor that does not appear on the mall directory. A maintenance log lists a worker named Elias Vale, assigned to the basement for twenty-three years. His final shift was never closed.',
+      whisper:'The intercom: “Staff entrance is for staff only. You are not staff anymore.”',
+      event:'THE USHER IS MOVING THE SIGNS.' },
+    { title:'THE CHILDREN’S WING', place:'THE TOY DEPARTMENT', entity:'THE STATIC CHILD', speed:12.2, noise:1.35, key:{x:10.4,y:11.35},
+      body:'A child is standing behind the toy-store glass. She holds a paper wristband dated tomorrow. Every security monitor shows her in a different place, always facing the camera. Her name is written on the back: Anya.',
+      whisper:'A small voice: “You promised you would come back for me.”',
+      event:'THE STATIC CHILD IS CLOSE.' },
+    { title:'THE HEART OF THE MALL', place:'THE MANAGEMENT FLOOR', entity:'THE NIGHT MANAGER', speed:10.8, noise:1.55, key:{x:52.2,y:11.35},
+      body:'The mall was built over a sealed cinema fire exit. The first manager, Mr. Vale, ordered it bricked up after the evacuation. The building has been repeating that night ever since. The people inside became its memories.',
+      whisper:'The PA, now speaking in your own voice: “Thank you for staying until closing.”',
+      event:'THE NIGHT MANAGER KNOWS YOUR NAME.' }
+  ];
+  const ENTITY_FILES = [
+    ['THE LISTENER','Former night security guard. He stayed after the evacuation to search the darkened corridors for his missing partner. The mall learned to imitate the sound of her footsteps. Now he follows every noise, convinced the next one will lead him home.','Gameplay: hunts loud movement, thrown objects and impacts.'],
+    ['THE USHER','Elias Vale maintained the service corridors. When the sealed cinema exit was discovered, he was ordered to redirect everyone away from it. He obeyed until the alarms stopped and the doors locked. He now appears wherever a sign points toward safety.','Gameplay: false directions and misleading announcements.'],
+    ['THE STATIC CHILD','Anya was separated from her family during the evacuation. The security cameras recorded her in places she could not have reached. She learned to hide inside the interference between frames.','Gameplay: brief sightings, screen distortion and warning whispers.'],
+    ['THE NIGHT MANAGER','Mr. Vale signed the final closure order and concealed the blocked exit. He believes the mall must remain full, lit and open forever. He does not chase; he schedules.','Gameplay: accelerates the hunt and turns the final escape into a timed ordeal.'],
+    ['THE MALL','The building absorbed the last night as a repeating memory. Corridors, announcements and locked doors are its nervous system. It keeps the missing as echoes and recruits the living to complete the shift.','Gameplay: escalating darkness, altered ambience and recurring spaces.']
+  ];
   let game = null, gameScene = null, titleScene = null;
   let gameReady = false, pendingStart = false;
   let soundOn = true, helpOpen = false;
@@ -130,6 +156,81 @@ window.addEventListener('error', function(e){
     { row:12, x0:58, x1:60, kind:'doors', sign:'',         color:'#ff5a4d' }
   ];
   M.FACADE_PLAN = FACADE_RUNS;
+  const BASE_PROPS=JSON.parse(JSON.stringify(PROPS));
+  const BASE_LIGHTS=JSON.parse(JSON.stringify(LIGHTS));
+  const BASE_FACADES=JSON.parse(JSON.stringify(FACADE_RUNS));
+
+  // Each chapter now has its own walkable floor plan, prop layout and facade language.
+  function chapterFloorPlan(index){
+    const g=Array.from({length:ROWS},()=>Array(COLS).fill('#'));
+    const F=(x0,y0,x1,y1)=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(x>0&&x<COLS-1&&y>0&&y<ROWS-1) g[y][x]='.'; };
+    if(index===0) return buildMap();
+    // All chapters share the shutter approach, but each has a different room topology.
+    F(2,14,61,17); F(57,13,61,18);
+    if(index===1){ // service tunnels: narrow cross-corridors and four utility bays
+      F(11,8,15,23); F(44,8,48,23); F(25,8,38,21);
+      F(6,8,20,11); F(40,8,56,11); F(6,20,20,23); F(40,20,56,23);
+      F(19,10,27,12); F(37,10,45,12); F(19,19,27,21); F(37,19,45,21);
+    } else if(index===2){ // toy wing: broad aisles with narrow display crossovers
+      F(7,7,19,12); F(23,7,39,12); F(43,7,56,12);
+      F(11,7,14,23); F(29,7,33,23); F(48,7,51,23);
+      F(7,20,21,23); F(25,20,39,23); F(43,20,56,23);
+      F(17,10,25,12); F(37,10,46,12); F(17,19,25,21); F(37,19,46,21);
+    } else { // management floor: a ring around the sealed central chamber
+      F(7,8,18,11); F(45,8,56,11); F(7,20,18,23); F(45,20,56,23);
+      F(11,8,14,23); F(48,8,51,23); F(22,8,41,11); F(22,20,41,23);
+      F(22,10,26,20); F(37,10,41,20); F(26,10,37,20);
+      F(18,10,22,12); F(41,10,45,12); F(18,19,22,21); F(41,19,45,21);
+    }
+    for(let y=13;y<=18;y++) g[y][56]='S';
+    return g;
+  }
+  function applyChapterLayout(index){
+    M.MAP=chapterFloorPlan(index);
+    const propSets=[
+      BASE_PROPS,
+      [
+        {t:'vending',x:9.5,y:15.3,w:16,h:10,block:[[9,15]]},{t:'payphone',x:17.5,y:9.6,w:7,h:7,block:[[17,9]]},
+        {t:'kiosk',x:27.5,y:9.7,w:14,h:9,block:[[27,9]]},{t:'arcade',x:34.5,y:20.5,w:13,h:9,block:[[34,20]]},
+        {t:'bench',x:47.5,y:15.5,w:30,h:7,block:[[47,15]]},{t:'rubber',x:13.5,y:21.4,w:9,h:7,block:[[13,21]]}
+      ],
+      [
+        {t:'kiosk',x:9.5,y:9.7,w:14,h:9,block:[[9,9]]},{t:'vending',x:17.5,y:21.4,w:16,h:10,block:[[17,21]]},
+        {t:'arcade',x:30.5,y:9.7,w:13,h:9,block:[[30,9]]},{t:'palm',x:34.5,y:21.3,w:9,h:7,block:[[34,21]]},
+        {t:'bench',x:49.5,y:9.7,w:30,h:7,block:[[49,9]]},{t:'rubber',x:49.5,y:21.4,w:9,h:7,block:[[49,21]]}
+      ],
+      [
+        {t:'bench',x:12.5,y:9.7,w:30,h:7,block:[[12,9]]},{t:'payphone',x:24.5,y:15.4,w:7,h:7,block:[[24,15]]},
+        {t:'fountain',x:31.5,y:15.4,w:36,h:19,block:[[30,14],[31,14],[32,14],[30,15],[31,15],[32,15]]},
+        {t:'arcade',x:39.5,y:9.7,w:13,h:9,block:[[39,9]]},{t:'kiosk',x:50.5,y:21.4,w:14,h:9,block:[[50,21]]}
+      ]
+    ];
+    PROPS.splice(0,PROPS.length,...JSON.parse(JSON.stringify(propSets[index])));
+    const lightSets=[BASE_LIGHTS,
+      [{x:8,y:12,pool:13},{x:14,y:8,pool:12},{x:26,y:8,pool:12},{x:34,y:20,pool:12},{x:46,y:8,pool:12},{x:52,y:12,pool:13}],
+      [{x:9,y:6.8,pool:12},{x:14,y:17.5,pool:12},{x:31,y:6.8,pool:12},{x:31,y:22,pool:12},{x:49,y:17.5,pool:12}],
+      [{x:12,y:7.5,pool:11},{x:24,y:7.5,pool:11},{x:32,y:15,pool:10},{x:40,y:7.5,pool:11},{x:50,y:7.5,pool:11},{x:32,y:22,pool:10}]
+    ];
+    LIGHTS.splice(0,LIGHTS.length,...JSON.parse(JSON.stringify(lightSets[index])));
+    const plans=[BASE_FACADES,
+      [{row:7,x0:6,x1:20,kind:'boards',sign:'STAFF ONLY',color:'#b9a26b'},{row:7,x0:40,x1:56,kind:'grate',sign:'SERVICE',color:'#6b6250'},{row:19,x0:6,x1:20,kind:'boards',sign:'BOILER',color:'#8f3a32'}],
+      [{row:6,x0:7,x1:19,kind:'glass',sign:'TOYS',color:'#f2b13c'},{row:6,x0:23,x1:39,kind:'glass',sign:'PLAY ZONE',color:'#7fe0b8'},{row:6,x0:43,x1:56,kind:'poster',sign:'FAMILY',color:'#8f3a32'}],
+      [{row:7,x0:7,x1:18,kind:'boards',sign:'EXECUTIVE',color:'#b9a26b'},{row:7,x0:22,x1:41,kind:'glass',sign:'MANAGEMENT',color:'#7fe0b8'},{row:7,x0:45,x1:56,kind:'doors',sign:'VALE',color:'#ff5a4d'}]
+    ];
+    FACADE_RUNS.splice(0,FACADE_RUNS.length,...JSON.parse(JSON.stringify(plans[index]))); M.FACADE_PLAN=FACADE_RUNS;
+  }
+  function prepareChapterArt(scene,index){
+    M.FACADE_IMAGES=[];
+    M.FACADE_PLAN.forEach((r,i)=>{
+      const w=(r.x1-r.x0+1)*16, base=(r.row+1)*16;
+      const key='chapter_facade_'+index+'_'+i;
+      if(!scene.textures.exists(key)) scene.textures.addCanvas(key,M.makeFacade(r.kind,w,r.sign,r.color,100+index*101+i*17));
+      M.FACADE_IMAGES.push({key,x:r.x0*16,y:base,w,base});
+    });
+    const worldKey='chapter_world_'+index;
+    if(!scene.textures.exists(worldKey)) scene.textures.addCanvas(worldKey,M.buildWorldBase(M.MAP,floorTypeAt));
+    return worldKey;
+  }
 
   // blockers used by the hunter pathfinder
   function makeBlocked(){
@@ -358,6 +459,9 @@ window.addEventListener('error', function(e){
       gameScene = this;
       titleScene = null;
       this.ended = false;
+      applyChapterLayout(currentChapter);
+      this.chapter = CHAPTERS[currentChapter];
+      this.keyPos = this.chapter.key || KEYCARD;
       this.opened = false;
       this.paused = false;
       this.pausedAt = 0;
@@ -378,6 +482,9 @@ window.addEventListener('error', function(e){
       this.heartT = 0;
       this.hudT = 0;
       this.chromaBurst = 0;
+      this.entityCueShown = false;
+      this.entityAbilityAt = this.time ? this.time.now + 5200 : 5200;
+      this.usherDecoyUntil = 0; this.staticPhaseUntil = 0; this.bossActive = false; this.bossDeadline = 0;
       this.doorFlash = 0;
       this.flickerT = 0;
       this.motes = Array.from({length:30}, ()=>({
@@ -386,7 +493,8 @@ window.addEventListener('error', function(e){
       this.blocked = makeBlocked();
       this.cameras.main.setBackgroundColor('#03050a');
 
-      this.add.image(0,0,'worldbase').setOrigin(0,0).setDepth(0);
+      const worldKey=prepareChapterArt(this,currentChapter);
+      this.add.image(0,0,worldKey).setOrigin(0,0).setTint([0xffffff,0xbac8c9,0xc8bfd8,0xe2b9ac][currentChapter]).setDepth(0);
       this.addFacades();
 
       this.solids = this.physics.add.staticGroup();
@@ -410,13 +518,14 @@ window.addEventListener('error', function(e){
       this.physics.world.setBounds(0,0,WW,WH);
       this.player.setCollideWorldBounds(true);
 
+      TUNE.hunterStep = this.chapter.speed;
       this.startRun();
       this.cameras.main.fadeIn(750,0,0,0);
       const fxEl = document.getElementById('fx');
       if(fxEl){ fxEl.style.opacity = '0'; setTimeout(()=>{ if(fxEl) fxEl.style.opacity='1'; }, 650); }
 
       this.time.delayedCall(850, ()=>{
-        if(!this.ended) showIntro("DON'T MAKE A SOUND.", 2800);
+        if(!this.ended) showChapterCutscene(this.chapter, this);
       });
       this.time.delayedCall(1450, ()=>{
         if(this.ended) return;
@@ -504,9 +613,9 @@ window.addEventListener('error', function(e){
     }
 
     addKeycard(){
-      this.keySprite = this.add.image(KEYCARD.x*16, KEYCARD.y*16, 'keycard')
-        .setOrigin(0.5,1).setDepth(KEYCARD.y*16);
-      this.keyGlow = this.add.image(KEYCARD.x*16, KEYCARD.y*16-8, 'glow_greenS')
+      this.keySprite = this.add.image(this.keyPos.x*16, this.keyPos.y*16, 'keycard')
+        .setOrigin(0.5,1).setDepth(this.keyPos.y*16);
+      this.keyGlow = this.add.image(this.keyPos.x*16, this.keyPos.y*16-8, 'glow_greenS')
         .setBlendMode(Phaser.BlendModes.ADD).setScale(0.55).setAlpha(0.35).setDepth(6000);
       this.tweens.add({targets:[this.keySprite], y:'-=2', duration:1100, yoyo:true, repeat:-1, ease:'Sine.easeInOut'});
       this.tweens.add({targets:[this.keyGlow], alpha:{from:0.18,to:0.5}, duration:1400, yoyo:true, repeat:-1});
@@ -701,7 +810,7 @@ window.addEventListener('error', function(e){
       if(h.state==='dormant' || h.state==='hunt') return;
       h.lastNoise={x:wx,y:wy};
       h.target={x:wx,y:wy};
-      h.alert=Math.max(h.alert,strength);
+      h.alert=Math.max(h.alert,strength * (this.chapter.noise||1));
       h.state='investigate';
       h.pauseUntil=this.time.now + (strength>0.8?260:520);
       h.nextStep=this.time.now + (strength>0.8?260:520);
@@ -717,7 +826,7 @@ window.addEventListener('error', function(e){
     }
 
     context(){
-      if(this.hasKey===false && this.near(KEYCARD.x*16, KEYCARD.y*16-4, 26)) return { t:'key', label:'TAKE KEYCARD' };
+      if(this.hasKey===false && this.near(this.keyPos.x*16, this.keyPos.y*16-4, 26)) return { t:'key', label:'TAKE KEYCARD' };
       if(this.near(SHUTTER.x*16, 15.6*16, 52)){
         return this.hasKey ? { t:'shutter', label:'OPEN SHUTTER' } : { t:'locked', label:'LOCKED, NEED A KEYCARD' };
       }
@@ -843,7 +952,7 @@ window.addEventListener('error', function(e){
       }
       const cx=nx*16+8, cy=ny*16+8;
       let dx=cx-h.x, dy=cy-h.y, d=Math.hypot(dx,dy)||1;
-      const step = h.state==='hunt' ? TUNE.hunterStep*1.15 : TUNE.hunterStep;
+      const step = h.state==='hunt' ? TUNE.hunterStep*(this.bossActive?1.75:1.15) : TUNE.hunterStep;
       if(d>step){ h.x += dx/d*step; h.y += dy/d*step; }
       else { h.x=cx; h.y=cy; }
       h.x=clamp(h.x,16,WW-16); h.y=clamp(h.y,16,WH-16);
@@ -869,9 +978,38 @@ window.addEventListener('error', function(e){
 
     updateHunter(dt){
       const h=this.hunter;
-      if(h.state==='dormant') return;
       const nowT=this.time.now;
+      // The Usher redirects the Listener toward a false announcement before resuming pursuit.
+      if(currentChapter===1 && nowT>this.entityAbilityAt && h.state!=='hunt'){
+        this.entityAbilityAt=nowT+10500;
+        const decoy={x:(Math.random()<0.5?13:47)*16,y:(Math.random()<0.5?9:21)*16};
+        h.target=decoy; h.state='investigate'; h.pauseUntil=nowT+250; h.nextStep=nowT+250;
+        this.usherDecoyUntil=nowT+2600;
+        showIntro('PA SYSTEM: PLEASE FOLLOW THE GREEN SIGNS.',1800);
+        this.flash(0.08,260);
+      }
+      // The Static Child phases out, then reappears behind the player as a warning.
+      if(currentChapter===2 && nowT>this.entityAbilityAt && h.state!=='hunt' && h.state!=='dormant'){
+        this.entityAbilityAt=nowT+12500;
+        h.state='dormant'; this.hunterSprite.setAlpha(0.12);
+        this.staticPhaseUntil=nowT+1800;
+        this.chromaBurst=0.42; this.flash(0.12,260);
+        showIntro('CAMERA 04: SUBJECT MISSING.',1500);
+      }
+      if(currentChapter===2 && h.state==='dormant' && this.staticPhaseUntil && nowT>=this.staticPhaseUntil){
+        const px=this.player.x, py=this.player.y;
+        const tx=clamp(Math.floor((px+(this.faceX*-105))/16),2,COLS-3), ty=clamp(Math.floor((py+(this.faceY*-105))/16),2,ROWS-3);
+        if(!this.blocked[ty][tx]){ h.x=tx*16+8; h.y=ty*16+8; }
+        h.state='idle'; h.target={x:px,y:py}; h.nextStep=nowT+450;
+        this.hunterSprite.setAlpha(0.78); this.hunterSprite.setTexture('hunter_still');
+        this.staticPhaseUntil=0;
+      }
+      if(h.state==='dormant') return;
       const distP=Math.hypot(this.player.x-h.x, this.player.y-h.y);
+      if(this.bossActive){
+        if(nowT>=this.bossDeadline){ this.bossDeadline=nowT+32000; this.flash(0.1,220); showIntro('THE MANAGER HAS RESET THE SHIFT.',1400); }
+        h.state='hunt'; h.huntUntil=this.bossDeadline; h.alert=1;
+      }
       const canSee = distP<90 && losClear(this.blocked, h.x,h.y,this.player.x,this.player.y);
       if(canSee && (this.noise>0.12 || distP<34) && h.state!=='hunt'){
         h.state='hunt';
@@ -1120,7 +1258,7 @@ window.addEventListener('error', function(e){
       if(!this.hasKey && this.keySprite && this.keySprite.active){
         ctx.globalAlpha=0.3+0.16*Math.sin(this.time.now*0.004);
         const ks=M.FX.greenS.width*0.6;
-        ctx.drawImage(M.FX.greenS, sx(KEYCARD.x*16)-ks/2, sy(KEYCARD.y*16-9)-ks/2, ks, ks);
+        ctx.drawImage(M.FX.greenS, sx(this.keyPos.x*16)-ks/2, sy(this.keyPos.y*16-9)-ks/2, ks, ks);
       }
       // arcade screen
       ctx.globalAlpha=0.26;
@@ -1295,6 +1433,10 @@ window.addEventListener('error', function(e){
       ui.prompt.classList.toggle('lock', c.t==='locked');
 
       ui.keyTag.classList.toggle('on', this.hasKey);
+      if(this.bossActive && !this.ended){
+        ui.noiseWord.textContent='FINAL SHIFT';
+        ui.noiseWord.style.color=P.red;
+      }
       document.documentElement.style.setProperty('--dread', this.dread.toFixed(3));
       ui.dread.style.opacity=(this.dread*0.62).toFixed(3);
       ui.chroma.style.opacity=Math.min(0.62, this.dread*0.22 + this.chromaBurst).toFixed(3);
@@ -1356,8 +1498,13 @@ window.addEventListener('error', function(e){
       try{ MB()?.event?.('escaped',{ seconds:Math.round(sec*10)/10, noise:Math.round(avg*100), bangs:this.bangs }); }catch(e){}
       try{ MB()?.event?.('escape_time',{ value:Math.round(sec*10)/10 }); }catch(e){}
       this.time.delayedCall(1050, ()=>{
-        showEndPanel(true, sec, avg*100, this.bangs, this);
-        submitAndBoard(sec);
+        if(currentChapter < CHAPTERS.length-1){
+          currentChapter++;
+          showChapterTransition(this.chapter, CHAPTERS[currentChapter]);
+        } else {
+          showEndPanel(true, sec, avg*100, this.bangs, this);
+          submitAndBoard(sec);
+        }
       });
     }
 
@@ -1385,6 +1532,64 @@ window.addEventListener('error', function(e){
         if(this.heartT<=0){ this.heartT=0.9-this.dread*0.25; Audio.heart(); }
       }
     }
+  }
+
+  function showChapterCutscene(chapter, scene){
+    const panel=document.getElementById('storyPanel');
+    if(!panel) return;
+    document.getElementById('storyKicker').textContent='CHAPTER '+String(currentChapter+1).padStart(2,'0')+' / 04  —  '+chapter.place;
+    document.getElementById('storyTitle').textContent=chapter.title;
+    document.getElementById('storyBody').textContent=chapter.body;
+    document.getElementById('storyWhisper').textContent=chapter.whisper;
+    const cinema=document.getElementById('cinematic');
+    const caption=document.getElementById('cinemaCaption');
+    const shots=[
+      '11:47 PM. THE SHUTTERS CLOSE. SOMETHING ANSWERS FROM THE DARK.',
+      'THE SERVICE LIFT OPENS. THE EXIT SIGN POINTS THE WRONG WAY.',
+      'CAMERA 04: A CHILD APPEARS IN A FRAME THAT HAS NOT BEEN RECORDED YET.',
+      'THE MANAGER IS WAITING. THE BUILDING HAS SAVED YOUR PLACE.'
+    ];
+    if(cinema){
+      cinema.dataset.chapter=String(currentChapter+1);
+      if(caption) caption.textContent=shots[currentChapter]||'THE MALL REMEMBERS.';
+      cinema.classList.remove('on');
+      void cinema.offsetWidth;
+      cinema.classList.add('on');
+    }
+    panel.classList.add('on');
+    if(scene && !scene.paused) scene.softPause(true);
+    document.getElementById('storyContinue').onclick=()=>{
+      panel.classList.remove('on');
+      if(cinema) cinema.classList.remove('on');
+      if(scene && scene.paused) scene.softPause(false);
+      showIntro(chapter.event, 2400);
+    };
+  }
+  function showChapterTransition(previous, next){
+    const panel=document.getElementById('storyPanel');
+    document.getElementById('storyKicker').textContent='CHAPTER COMPLETE — '+previous.place;
+    document.getElementById('storyTitle').textContent=next.title;
+    document.getElementById('storyBody').textContent='You found a way through. The mall changes around you. Somewhere beyond the next shutter, '+next.entity+' is waiting.';
+    document.getElementById('storyWhisper').textContent=next.whisper;
+    panel.classList.add('on');
+    document.getElementById('storyContinue').textContent='ENTER CHAPTER '+String(currentChapter+1).padStart(2,'0');
+    document.getElementById('storyContinue').onclick=()=>{
+      panel.classList.remove('on');
+      document.getElementById('storyContinue').textContent='ENTER THE MALL';
+      if(gameScene) gameScene.scene.restart();
+    };
+  }
+  function openEntityFiles(){
+    const host=document.getElementById('loreEntries');
+    host.innerHTML='';
+    ENTITY_FILES.forEach((entry,i)=>{
+      const article=document.createElement('article'); article.className='loreEntry';
+      const h=document.createElement('h3'); h.textContent=String(i+1).padStart(2,'0')+' / '+entry[0];
+      const p=document.createElement('p'); p.textContent=entry[1];
+      const small=document.createElement('small'); small.textContent=entry[2];
+      article.append(h,p,small); host.appendChild(article);
+    });
+    document.getElementById('lorePanel').classList.add('on');
   }
 
   /* ===============================================================
@@ -1416,7 +1621,7 @@ window.addEventListener('error', function(e){
     ui.endPanel.classList.add('on');
     ui.endTitle.textContent = escaped ? 'YOU GOT OUT' : 'CAUGHT';
     ui.endTitle.className = escaped ? '' : 'bad';
-    ui.endLine.textContent = escaped ? 'THE MALL LETS YOU LEAVE.' : 'THE MALL KEEPS YOU.';
+    ui.endLine.textContent = escaped ? 'THE DOORS OPEN. THE BUILDING REMAINS AWAKE.' : 'THE MALL KEEPS YOU.';
     ui.endTime.textContent = M.fmt(seconds);
     ui.endStat.textContent = 'NOISE '+Math.round(noisePct)+'%   DISTURBANCES '+bangs;
     ui.board.innerHTML='';
@@ -1461,6 +1666,7 @@ window.addEventListener('error', function(e){
   /* ---------- entry ---------- */
   function beginGame(){
     if(mode!=='title') return;
+    currentChapter = 0;
     if(!gameReady){ pendingStart=true; return; }
     mode='transition';
     helpOpen=false; ui.helpPanel.classList.remove('on');
@@ -1484,6 +1690,7 @@ window.addEventListener('error', function(e){
 
   function again(){
     if(mode!=='end') return;
+    currentChapter = 0;
     mode='game';
     ui.endPanel.classList.remove('on');
     ui.glass.classList.remove('dead');
@@ -1657,6 +1864,8 @@ window.addEventListener('error', function(e){
     $('#soundBtn').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); setSound(!soundOn); Audio.ui(); });
     $('#helpBtn').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); if(helpOpen) closeHelp(); else openHelp(); });
     $('#helpClose').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeHelp(); });
+    $('#loreBtn').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); openEntityFiles(); });
+    $('#loreClose').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); $('#lorePanel').classList.remove('on'); });
     $('#againBtn').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); again(); });
     $('#titleBtn').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toTitle(); });
     const hw=$('#soundBtn'); hw.addEventListener('pointerdown', e=>e.stopPropagation());
