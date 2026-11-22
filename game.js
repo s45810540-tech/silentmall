@@ -24,28 +24,49 @@ window.addEventListener('error', function(e){
   let currentChapter = 0;
   const CHAPTERS = [
     { title:'THE CLOSING SHIFT', place:'THE MAIN ATRIUM', entity:'THE LISTENER', speed:15, noise:1, key:{x:45.3,y:11.45},
-      body:'11:47 PM. You were the last employee on the rota. The shutters came down while you were in the staff corridor. Your phone has no signal. The emergency doors are locked from the outside.',
-      whisper:'A voice from the PA: “Please remain calm. The mall is not yet empty.”',
-      event:'THE LISTENER HAS HEARD YOU.' },
+      body:'11:47 PM. Seven years to the night the mall sealed itself with forty-one people still inside, and you are the last name on the rota. Her paper wristband is in your pocket, still dated tomorrow. The staff door bolts behind you. Your phone has no signal. The emergency doors are locked from the outside.',
+      whisper:'A voice from the PA: \u201cPlease remain calm. The mall is not yet empty.\u201d',
+      event:'THE LISTENER HAS HEARD YOU.',
+      bridge:'You found the keycard in a coat that still smells of rain. The shutter lifts onto a service corridor, and somewhere below you a lift is already coming up.' },
     { title:'BELOW THE FOOD COURT', place:'THE SERVICE LEVEL', entity:'THE USHER', speed:13.5, noise:1.18, key:{x:32.2,y:10.8},
-      body:'The service lift opens onto a floor that does not appear on the mall directory. A maintenance log lists a worker named Elias Vale, assigned to the basement for twenty-three years. His final shift was never closed.',
-      whisper:'The intercom: “Staff entrance is for staff only. You are not staff anymore.”',
-      event:'THE USHER IS MOVING THE SIGNS.' },
-    { title:'THE CHILDREN’S WING', place:'THE TOY DEPARTMENT', entity:'THE STATIC CHILD', speed:12.2, noise:1.35, key:{x:10.4,y:11.35},
-      body:'A child is standing behind the toy-store glass. She holds a paper wristband dated tomorrow. Every security monitor shows her in a different place, always facing the camera. Her name is written on the back: Anya.',
-      whisper:'A small voice: “You promised you would come back for me.”',
-      event:'THE STATIC CHILD IS CLOSE.' },
+      body:'The service lift opens onto a floor that is not printed on any directory. A maintenance log lists Elias Vale, twenty-three years in the basement. His handwriting gets smaller toward the end, as if he was making room for something. His final shift was never closed, and neither was the corridor he kept clear.',
+      whisper:'The intercom: \u201cStaff entrance is for staff only. You are not staff anymore.\u201d',
+      event:'THE USHER IS MOVING THE SIGNS.',
+      bridge:'The signs point the wrong way on purpose. You stop trusting the arrows and start trusting the smell of smoke coming from the toy wing.' },
+    { title:'THE CHILDREN\u2019S WING', place:'THE TOY DEPARTMENT', entity:'THE STATIC CHILD', speed:12.2, noise:1.35, key:{x:10.4,y:11.35},
+      body:'She is standing behind the toy-store glass, exactly where you told her to wait. The wristband is dated tomorrow because tomorrow is the day you promised. Every monitor shows her in a different room, always facing the camera, always patient. Her name is written on the back in your handwriting: Anya.',
+      whisper:'A small voice: \u201cYou promised you would come back for me.\u201d',
+      event:'THE STATIC CHILD IS CLOSE.',
+      bridge:'The keycard was in her pocket. She let you take it. That is the first thing tonight that has felt like permission.' },
+    { title:'THE LOST & FOUND', place:'THE STOCKROOM', entity:'THE COLLECTOR', speed:11.6, noise:1.4, key:{x:13.5,y:9.5},
+      body:'Everything unclaimed comes down here: umbrellas, phones, wedding rings, children. Every box carries a name and a date. Box 41 holds one small shoe and one paper wristband. The box beside it has your name on it, and it was labelled seven years ago, in advance, by someone who knew you would eventually come back.',
+      whisper:'A polite voice, filing: \u201cUnclaimed items are held for ninety days. You are past due.\u201d',
+      event:'THE COLLECTOR HAS FILED YOU.',
+      bridge:'The shelves rearrange behind you as you leave. She is not chasing. She is re-filing the exit somewhere less convenient.' },
+    { title:'THE SCREENING ROOM', place:'THE SEALED CINEMA', entity:'THE PROJECTIONIST', speed:11.2, noise:1.45, key:{x:49.5,y:10.5},
+      body:'The cinema was sealed with the audience still inside. The projector never stopped, because one man decided that if the film keeps running then the night has not ended. Tonight he screens the only footage that matters: a nineteen-year-old in a crowd, letting go of a small hand, and calling it an accident for seven years.',
+      whisper:'The projector clicks: \u201cPlease take your seats. The feature is about to begin again.\u201d',
+      event:'THE PROJECTIONIST IS PLAYING YOUR NIGHT.',
+      bridge:'The reel runs out. In the silence afterwards you can hear a lift, a shutter, and someone small counting to a hundred.' },
     { title:'THE HEART OF THE MALL', place:'THE MANAGEMENT FLOOR', entity:'THE NIGHT MANAGER', speed:10.8, noise:1.55, key:{x:52.2,y:11.35},
-      body:'The mall was built over a sealed cinema fire exit. The first manager, Mr. Vale, ordered it bricked up after the evacuation. The building has been repeating that night ever since. The people inside became its memories.',
-      whisper:'The PA, now speaking in your own voice: “Thank you for staying until closing.”',
-      event:'THE NIGHT MANAGER KNOWS YOUR NAME.' }
+      body:'Mr. Vale signed the closure order at 11:52 PM, before the last person was out, and bricked the only exit that still opened. He believed a mall must stay full, lit and open forever. He got his wish. He does not chase anyone; he schedules them. You are on the rota now, and the shift does not end.',
+      whisper:'The PA, now speaking in your own voice: \u201cThank you for staying until closing.\u201d',
+      event:'THE NIGHT MANAGER KNOWS YOUR NAME.',
+      bridge:'The manager\u2019s keycard opens the last door in the building. Above it there is one more flight of stairs than there should be.' },
+    { title:'THE ROOF', place:'THE SERVICE STAIRS', entity:'THE MALL', speed:10.2, noise:1.7, key:{x:30.5,y:10.5},
+      body:'The service stairs climb one floor higher than the building has. Above you the sky is the colour of a bruise healing. Her wristband is still in your pocket, soft from being carried. The hatch opens both ways: into the morning alone, or back to the toy department with her name in your hands.',
+      whisper:'The PA, in your own voice: \u201cYou said you would come back.\u201d',
+      event:'THE MALL IS CLOSING FOR THE LAST TIME.',
+      bridge:'5:41 AM.' }
   ];
   const ENTITY_FILES = [
-    ['THE LISTENER','Former night security guard. He stayed after the evacuation to search the darkened corridors for his missing partner. The mall learned to imitate the sound of her footsteps. Now he follows every noise, convinced the next one will lead him home.','Gameplay: hunts loud movement, thrown objects and impacts.'],
-    ['THE USHER','Elias Vale maintained the service corridors. When the sealed cinema exit was discovered, he was ordered to redirect everyone away from it. He obeyed until the alarms stopped and the doors locked. He now appears wherever a sign points toward safety.','Gameplay: false directions and misleading announcements.'],
-    ['THE STATIC CHILD','Anya was separated from her family during the evacuation. The security cameras recorded her in places she could not have reached. She learned to hide inside the interference between frames.','Gameplay: brief sightings, screen distortion and warning whispers.'],
-    ['THE NIGHT MANAGER','Mr. Vale signed the final closure order and concealed the blocked exit. He believes the mall must remain full, lit and open forever. He does not chase; he schedules.','Gameplay: accelerates the hunt and turns the final escape into a timed ordeal.'],
-    ['THE MALL','The building absorbed the last night as a repeating memory. Corridors, announcements and locked doors are its nervous system. It keeps the missing as echoes and recruits the living to complete the shift.','Gameplay: escalating darkness, altered ambience and recurring spaces.']
+    ['THE LISTENER','Arjun was the night guard on the rota. When the alarm went off he pulled people out through the shutter one at a time, and when he saw a small hand reaching up he went back inside for it. The mall learned the sound of his partner\u2019s footsteps and has been using them to call him through the corridors ever since. He is still answering.','Gameplay: hunts loud movement, thrown objects and impacts.'],
+    ['THE USHER','Elias Vale kept the service corridors for twenty-three years. When the sealed cinema exit was discovered, the manager ordered him to keep the corridor clear, so he redirected forty-one people away from the only door that still opened. He obeyed until the alarms stopped, and he has been directing traffic ever since.','Gameplay: false directions and misleading announcements.'],
+    ['THE STATIC CHILD','Anya was seven. She was told to wait by the toys and she has done exactly that for seven years. The cameras record her in rooms she cannot reach because she has learned to live in the gap between frames, in the half-second where the mall is not looking. She is not the danger in this building. She is the reason it is still open.','Gameplay: brief sightings, screen distortion and warning whispers.'],
+    ['THE COLLECTOR','She ran the Lost & Found counter. She believes everything that goes unclaimed must be filed, labelled and kept, including the people who never came back for them. Box 41 is a small shoe. The box beside it has your name, written the night you left. She has been waiting to complete the record.','Gameplay: rearranges the stockroom and files the exit somewhere else.'],
+    ['THE PROJECTIONIST','He was running the late show when the alarms started. He kept the reel turning because stopping it would mean admitting the night was over. He shows the evacuation every night to an audience that cannot leave, and lately he has been splicing your face into the footage.','Gameplay: floods the screen with light and your own memories.'],
+    ['THE NIGHT MANAGER','Mr. Vale signed the closure order at 11:52 PM and had the last open exit bricked up, because a mall must stay full, lit and open forever. He does not hunt; he schedules. Everyone inside is another shift that must be completed, and he has already written your name on the rota.','Gameplay: accelerates the hunt and turns the final escape into a timed ordeal.'],
+    ['THE MALL','The building absorbed that night as a repeating memory: corridors, announcements and locked doors are its nervous system. It keeps the missing as echoes and recruits the living to complete the shift. It is not cruel. It is simply open, and it intends to stay open.','Gameplay: escalating darkness, altered ambience and recurring spaces.']
   ];
   let game = null, gameScene = null, titleScene = null;
   let gameReady = false, pendingStart = false;
@@ -80,6 +101,39 @@ window.addEventListener('error', function(e){
   M.MAP = buildMap();
 
   function floorTypeAt(tx,ty){
+    // Each floor of the building is built of different material.
+    const ch = (M.CHAPTER_INDEX|0);
+    if(ch===1){                       // service level: bare concrete, drains, standing water
+      const k=(tx*7+ty*11)%13;
+      if(k===1||k===5) return 'grate';
+      if(k===3||k===9) return 'wet';
+      return 'crack';
+    }
+    if(ch===2){                       // toy wing: soft play carpet, checker thresholds
+      if(tx>=23 && tx<=39 && ty>=7 && ty<=12) return 'checker';
+      return 'carpet';
+    }
+    if(ch===3){                       // stockroom: dusty concrete, cracked slab
+      const k=(tx*7+ty*11)%11;
+      if(k===2) return 'grate';
+      if(k===6) return 'wet';
+      return 'crack';
+    }
+    if(ch===4){                       // sealed cinema: red house carpet, checker lobby
+      if(tx>=40) return 'checker';
+      if(tx>=8 && tx<=30) return 'carpet';
+      return 'terra';
+    }
+    if(ch===5){                       // management: polished terrazzo and marble checker
+      if((tx+ty)%7===0) return 'checker';
+      return 'terra';
+    }
+    if(ch===6){                       // roof: wet concrete, drains, cracks
+      const k=(tx*7+ty*11)%9;
+      if(k===0||k===4) return 'wet';
+      if(k===2||k===7) return 'grate';
+      return 'crack';
+    }
     if(tx>=26 && tx<=38 && ty>=9 && ty<=22){
       if(tx>=30 && tx<=34 && ty>=15 && ty<=19) return 'carpet';
       return 'terra';
@@ -176,11 +230,26 @@ window.addEventListener('error', function(e){
       F(11,7,14,23); F(29,7,33,23); F(48,7,51,23);
       F(7,20,21,23); F(25,20,39,23); F(43,20,56,23);
       F(17,10,25,12); F(37,10,46,12); F(17,19,25,21); F(37,19,46,21);
-    } else { // management floor: a ring around the sealed central chamber
+    } else if(index===3){ // lost & found: stockroom aisles above and below the concourse
+      F(6,6,20,13); F(26,6,38,13); F(44,6,58,13);
+      F(6,19,20,26); F(26,19,38,26); F(44,19,58,26);
+      F(9,13,11,14); F(30,13,33,14); F(50,13,53,14);
+      F(9,17,11,19); F(30,17,33,19); F(50,17,53,19);
+    } else if(index===4){ // sealed cinema: auditorium, booth and concession
+      F(8,6,30,13); F(8,19,30,26);
+      F(40,7,58,13); F(40,19,58,26);
+      F(33,10,44,12); F(33,20,44,22);
+      F(34,13,38,14); F(34,17,38,19);
+    } else if(index===5){ // management floor: a ring around the sealed central chamber
       F(7,8,18,11); F(45,8,56,11); F(7,20,18,23); F(45,20,56,23);
       F(11,8,14,23); F(48,8,51,23); F(22,8,41,11); F(22,20,41,23);
       F(22,10,26,20); F(37,10,41,20); F(26,10,37,20);
       F(18,10,22,12); F(41,10,45,12); F(18,19,22,21); F(41,19,45,21);
+    } else { // the roof: open deck, stair heads, planters
+      F(4,6,20,13); F(24,6,40,13); F(44,6,61,13);
+      F(4,19,20,26); F(24,19,40,26); F(44,19,61,26);
+      F(18,9,26,12); F(38,9,46,12);
+      F(18,18,26,20); F(38,18,46,20);
     }
     for(let y=13;y<=18;y++) g[y][56]='S';
     return g;
@@ -203,19 +272,56 @@ window.addEventListener('error', function(e){
         {t:'bench',x:12.5,y:9.7,w:30,h:7,block:[[12,9]]},{t:'payphone',x:24.5,y:15.4,w:7,h:7,block:[[24,15]]},
         {t:'fountain',x:31.5,y:15.4,w:36,h:19,block:[[30,14],[31,14],[32,14],[30,15],[31,15],[32,15]]},
         {t:'arcade',x:39.5,y:9.7,w:13,h:9,block:[[39,9]]},{t:'kiosk',x:50.5,y:21.4,w:14,h:9,block:[[50,21]]}
+      ],
+      [ // lost & found: shelving banks as low benches, counters as kiosks
+        {t:'bench',x:8.5,y:12.6,w:30,h:7,block:[[8,12]]},{t:'bench',x:15.5,y:12.6,w:30,h:7,block:[[15,12]]},
+        {t:'vending',x:30.5,y:12.7,w:16,h:10,block:[[30,12]]},{t:'rubber',x:35.5,y:12.7,w:9,h:7,block:[[35,12]]},
+        {t:'kiosk',x:47.5,y:12.7,w:14,h:9,block:[[47,12]]},{t:'bench',x:53.5,y:12.6,w:30,h:7,block:[[53,12]]},
+        {t:'arcade',x:9.5,y:22.4,w:13,h:9,block:[[9,22]]},{t:'palm',x:16.5,y:22.4,w:9,h:7,block:[[16,22]]},
+        {t:'bench',x:30.5,y:22.4,w:30,h:7,block:[[30,22]]},{t:'kiosk',x:47.5,y:22.4,w:14,h:9,block:[[47,22]]},
+        {t:'payphone',x:54.5,y:22.4,w:7,h:7,block:[[54,22]]}
+      ],
+      [ // sealed cinema: seat rows as benches, marquee cases as kiosks
+        {t:'bench',x:10.5,y:9.6,w:30,h:7,block:[[10,9]]},{t:'bench',x:10.5,y:12.5,w:30,h:7,block:[[10,12]]},
+        {t:'arcade',x:24.5,y:9.6,w:13,h:9,block:[[24,9]]},{t:'rubber',x:24.5,y:12.5,w:9,h:7,block:[[24,12]]},
+        {t:'bench',x:10.5,y:21.5,w:30,h:7,block:[[10,21]]},{t:'vending',x:24.5,y:21.4,w:16,h:10,block:[[24,21]]},
+        {t:'kiosk',x:46.5,y:12.5,w:14,h:9,block:[[46,12]]},{t:'bench',x:52.5,y:9.6,w:30,h:7,block:[[52,9]]},
+        {t:'palm',x:54.5,y:21.5,w:9,h:7,block:[[54,21]]}
+      ],
+      [ // management floor
+        {t:'bench',x:9.5,y:9.6,w:30,h:7,block:[[9,9]]},{t:'kiosk',x:14.5,y:9.6,w:14,h:9,block:[[14,9]]},
+        {t:'arcade',x:49.5,y:9.6,w:13,h:9,block:[[49,9]]},{t:'payphone',x:54.5,y:9.6,w:7,h:7,block:[[54,9]]},
+        {t:'bench',x:9.5,y:22.4,w:30,h:7,block:[[9,22]]},{t:'kiosk',x:15.5,y:22.4,w:14,h:9,block:[[15,22]]},
+        {t:'fountain',x:31.5,y:15.4,w:36,h:19,block:[[30,14],[31,14],[32,14],[30,15],[31,15],[32,15]]},
+        {t:'bench',x:49.5,y:22.4,w:30,h:7,block:[[49,22]]}
+      ],
+      [ // the roof: vents, planters, stair housings
+        {t:'palm',x:6.5,y:12.6,w:9,h:7,block:[[6,12]]},{t:'bench',x:12.5,y:12.6,w:30,h:7,block:[[12,12]]},
+        {t:'vending',x:26.5,y:12.6,w:16,h:10,block:[[26,12]]},{t:'rubber',x:35.5,y:12.6,w:9,h:7,block:[[35,12]]},
+        {t:'bench',x:48.5,y:12.6,w:30,h:7,block:[[48,12]]},
+        {t:'arcade',x:6.5,y:22.4,w:13,h:9,block:[[6,22]]},{t:'bench',x:26.5,y:22.4,w:30,h:7,block:[[26,22]]},
+        {t:'kiosk',x:48.5,y:22.4,w:14,h:9,block:[[48,22]]}
       ]
     ];
     PROPS.splice(0,PROPS.length,...JSON.parse(JSON.stringify(propSets[index])));
     const lightSets=[BASE_LIGHTS,
       [{x:8,y:12,pool:13},{x:14,y:8,pool:12},{x:26,y:8,pool:12},{x:34,y:20,pool:12},{x:46,y:8,pool:12},{x:52,y:12,pool:13}],
       [{x:9,y:6.8,pool:12},{x:14,y:17.5,pool:12},{x:31,y:6.8,pool:12},{x:31,y:22,pool:12},{x:49,y:17.5,pool:12}],
-      [{x:12,y:7.5,pool:11},{x:24,y:7.5,pool:11},{x:32,y:15,pool:10},{x:40,y:7.5,pool:11},{x:50,y:7.5,pool:11},{x:32,y:22,pool:10}]
+      [{x:12,y:7.5,pool:11},{x:24,y:7.5,pool:11},{x:32,y:15,pool:10},{x:40,y:7.5,pool:11},{x:50,y:7.5,pool:11},{x:32,y:22,pool:10}],
+      [{x:12,y:5.5,pool:10},{x:32,y:5.5,pool:10},{x:51,y:5.5,pool:10},{x:12,y:18.5,pool:10},{x:32,y:18.5,pool:10},{x:51,y:18.5,pool:10}],
+      [{x:19,y:5.5,pool:11},{x:49,y:6.5,pool:11},{x:19,y:18.5,pool:10},{x:49,y:18.5,pool:10},{x:36,y:15,pool:9}],
+      [{x:12,y:7.5,pool:11},{x:24,y:7.5,pool:11},{x:32,y:15,pool:10},{x:40,y:7.5,pool:11},{x:50,y:7.5,pool:11},{x:32,y:22,pool:10}],
+      [{x:12,y:5.5,pool:12},{x:32,y:5.5,pool:12},{x:52,y:5.5,pool:12},{x:12,y:18.5,pool:12},{x:32,y:18.5,pool:12},{x:52,y:18.5,pool:12},{x:34,y:15,pool:9}]
     ];
     LIGHTS.splice(0,LIGHTS.length,...JSON.parse(JSON.stringify(lightSets[index])));
     const plans=[BASE_FACADES,
       [{row:7,x0:6,x1:20,kind:'boards',sign:'STAFF ONLY',color:'#b9a26b'},{row:7,x0:40,x1:56,kind:'grate',sign:'SERVICE',color:'#6b6250'},{row:19,x0:6,x1:20,kind:'boards',sign:'BOILER',color:'#8f3a32'}],
       [{row:6,x0:7,x1:19,kind:'glass',sign:'TOYS',color:'#f2b13c'},{row:6,x0:23,x1:39,kind:'glass',sign:'PLAY ZONE',color:'#7fe0b8'},{row:6,x0:43,x1:56,kind:'poster',sign:'FAMILY',color:'#8f3a32'}],
-      [{row:7,x0:7,x1:18,kind:'boards',sign:'EXECUTIVE',color:'#b9a26b'},{row:7,x0:22,x1:41,kind:'glass',sign:'MANAGEMENT',color:'#7fe0b8'},{row:7,x0:45,x1:56,kind:'doors',sign:'VALE',color:'#ff5a4d'}]
+      [{row:7,x0:7,x1:18,kind:'boards',sign:'EXECUTIVE',color:'#b9a26b'},{row:7,x0:22,x1:41,kind:'glass',sign:'MANAGEMENT',color:'#7fe0b8'},{row:7,x0:45,x1:56,kind:'doors',sign:'VALE',color:'#ff5a4d'}],
+      [{row:5,x0:6,x1:20,kind:'boards',sign:'LOST & FOUND',color:'#b9a26b'},{row:5,x0:26,x1:38,kind:'grate',sign:'STOCK',color:'#6b6250'},{row:5,x0:44,x1:58,kind:'boards',sign:'UNCLAIMED',color:'#8f3a32'},{row:18,x0:6,x1:20,kind:'poster',sign:'BOX 41',color:'#8f3a32'}],
+      [{row:5,x0:8,x1:30,kind:'poster',sign:'SCREEN 1',color:'#8f3a32'},{row:6,x0:40,x1:58,kind:'glass',sign:'PROJECTION',color:'#7fe0b8'},{row:18,x0:8,x1:30,kind:'poster',sign:'SCREEN 2',color:'#8f3a32'},{row:18,x0:40,x1:58,kind:'boards',sign:'CONCESSION',color:'#b9a26b'}],
+      [{row:7,x0:7,x1:18,kind:'boards',sign:'EXECUTIVE',color:'#b9a26b'},{row:7,x0:22,x1:41,kind:'glass',sign:'MANAGEMENT',color:'#7fe0b8'},{row:7,x0:45,x1:56,kind:'doors',sign:'VALE',color:'#ff5a4d'}],
+      [{row:5,x0:4,x1:20,kind:'grate',sign:'STAIRS',color:'#6b6250'},{row:5,x0:24,x1:40,kind:'boards',sign:'ROOF ACCESS',color:'#b9a26b'},{row:5,x0:44,x1:61,kind:'tile',sign:'HATCH',color:'#7fe0b8'},{row:18,x0:24,x1:40,kind:'grate',sign:'PLANT',color:'#6b6250'}]
     ];
     FACADE_RUNS.splice(0,FACADE_RUNS.length,...JSON.parse(JSON.stringify(plans[index]))); M.FACADE_PLAN=FACADE_RUNS;
   }
@@ -460,6 +566,7 @@ window.addEventListener('error', function(e){
       titleScene = null;
       this.ended = false;
       applyChapterLayout(currentChapter);
+      M.CHAPTER_INDEX = currentChapter;
       this.chapter = CHAPTERS[currentChapter];
       this.keyPos = this.chapter.key || KEYCARD;
       this.opened = false;
@@ -494,7 +601,7 @@ window.addEventListener('error', function(e){
       this.cameras.main.setBackgroundColor('#03050a');
 
       const worldKey=prepareChapterArt(this,currentChapter);
-      this.add.image(0,0,worldKey).setOrigin(0,0).setTint([0xffffff,0xbac8c9,0xc8bfd8,0xe2b9ac][currentChapter]).setDepth(0);
+      this.add.image(0,0,worldKey).setOrigin(0,0).setTint([0xffffff,0xbac8c9,0xc8bfd8,0xe2b9ac,0xa9b6c4,0xd8a89c,0xffd9b0][currentChapter]).setDepth(0);
       this.addFacades();
 
       this.solids = this.physics.add.staticGroup();
@@ -547,6 +654,8 @@ window.addEventListener('error', function(e){
         win:()=>this.win(),
         caught:()=>this.caught(),
         shutter:()=>{ this.hasKey=true; this.openShutter(); },
+        chapter:(n)=>{ currentChapter=Math.max(0,Math.min(CHAPTERS.length-1, n|0)); this.scene.restart(); },
+        goto:(n)=>{ currentChapter=Math.max(0,Math.min(CHAPTERS.length-1, n|0)); this.scene.restart(); },
         scene:()=>this
       };
     }
@@ -827,10 +936,11 @@ window.addEventListener('error', function(e){
 
     context(){
       if(this.hasKey===false && this.near(this.keyPos.x*16, this.keyPos.y*16-4, 26)) return { t:'key', label:'TAKE KEYCARD' };
+      // the way out wins over the shutter once it is open, so the last step is never ambiguous
+      if(this.shutterOpen && this.near(EXIT.x*16, 13.5*16, 46)) return { t:'exit', label:'GET OUT' };
       if(this.near(SHUTTER.x*16, 15.6*16, 52)){
-        return this.hasKey ? { t:'shutter', label:'OPEN SHUTTER' } : { t:'locked', label:'LOCKED, NEED A KEYCARD' };
+        return this.hasKey ? { t:'shutter', label:'OPEN SHUTTER'} : { t:'locked', label:'LOCKED, NEED A KEYCARD' };
       }
-      if(this.shutterOpen && this.near(EXIT.x*16, 13.5*16, 40)) return { t:'exit', label:'GET OUT' };
       // noisy props
       for(const p of PROPS){
         if(['vending','payphone','arcade','kiosk'].indexOf(p.t)>=0 && this.near(p.x*16, p.y*16-9, 26)){
@@ -870,6 +980,12 @@ window.addEventListener('error', function(e){
       this.toast('KEYCARD', 1200);
       Audio.pickup();
       this.emitRing(this.player.x, this.player.y, 34, 0.16, {speed:160});
+      if(window.STORY && window.STORY.interlude && !this.interludeSeen){
+        this.interludeSeen = true;
+        const scene=this;
+        scene.softPause(true);
+        window.STORY.interlude(currentChapter, ()=>{ if(scene.paused) scene.softPause(false); });
+      }
     }
 
     throwCan(){
@@ -1502,8 +1618,16 @@ window.addEventListener('error', function(e){
           currentChapter++;
           showChapterTransition(this.chapter, CHAPTERS[currentChapter]);
         } else {
-          showEndPanel(true, sec, avg*100, this.bangs, this);
-          submitAndBoard(sec);
+          const settle=(kind)=>{
+            showEndPanel(true, sec, avg*100, this.bangs, this, kind);
+            submitAndBoard(sec);
+          };
+          if(window.STORY && window.STORY.finalChoice){
+            window.STORY.finalChoice((kind)=>{
+              if(window.STORY.ending) window.STORY.ending(kind, ()=>settle(kind));
+              else settle(kind);
+            });
+          } else settle('hollow');
         }
       });
     }
@@ -1534,45 +1658,45 @@ window.addEventListener('error', function(e){
     }
   }
 
+  function storyResume(scene, chapter){
+    if(scene && scene.paused) scene.softPause(false);
+    showIntro(chapter.event, 2400);
+  }
   function showChapterCutscene(chapter, scene){
     const panel=document.getElementById('storyPanel');
     if(!panel) return;
-    document.getElementById('storyKicker').textContent='CHAPTER '+String(currentChapter+1).padStart(2,'0')+' / 04  —  '+chapter.place;
-    document.getElementById('storyTitle').textContent=chapter.title;
-    document.getElementById('storyBody').textContent=chapter.body;
-    document.getElementById('storyWhisper').textContent=chapter.whisper;
-    const cinema=document.getElementById('cinematic');
-    const caption=document.getElementById('cinemaCaption');
-    const shots=[
-      '11:47 PM. THE SHUTTERS CLOSE. SOMETHING ANSWERS FROM THE DARK.',
-      'THE SERVICE LIFT OPENS. THE EXIT SIGN POINTS THE WRONG WAY.',
-      'CAMERA 04: A CHILD APPEARS IN A FRAME THAT HAS NOT BEEN RECORDED YET.',
-      'THE MANAGER IS WAITING. THE BUILDING HAS SAVED YOUR PLACE.'
-    ];
-    if(cinema){
-      cinema.dataset.chapter=String(currentChapter+1);
-      if(caption) caption.textContent=shots[currentChapter]||'THE MALL REMEMBERS.';
-      cinema.classList.remove('on');
-      void cinema.offsetWidth;
-      cinema.classList.add('on');
-    }
-    panel.classList.add('on');
     if(scene && !scene.paused) scene.softPause(true);
-    document.getElementById('storyContinue').onclick=()=>{
-      panel.classList.remove('on');
-      if(cinema) cinema.classList.remove('on');
-      if(scene && scene.paused) scene.softPause(false);
-      showIntro(chapter.event, 2400);
+    const total=CHAPTERS.length;
+    const fillPanel=()=>{
+      document.getElementById('storyKicker').textContent='CHAPTER '+String(currentChapter+1).padStart(2,'0')+' / '+String(total).padStart(2,'0')+'  \u2014  '+chapter.place;
+      document.getElementById('storyTitle').textContent=chapter.title;
+      document.getElementById('storyBody').textContent=chapter.body;
+      document.getElementById('storyWhisper').textContent=chapter.whisper;
+      document.getElementById('storyContinue').textContent = currentChapter===total-1 ? 'OPEN THE HATCH' : 'ENTER THE MALL';
+      panel.classList.add('on');
+      document.getElementById('storyContinue').onclick=()=>{
+        panel.classList.remove('on');
+        document.getElementById('storyContinue').textContent='ENTER THE MALL';
+        storyResume(scene, chapter);
+      };
     };
+    if(window.STORY && window.STORY.chapterIntro){
+      const intro=()=>window.STORY.chapterIntro(currentChapter, fillPanel);
+      if(currentChapter===0 && !window.__prologueSeen){
+        window.__prologueSeen=true;
+        if(window.STORY.prologue) window.STORY.prologue(intro); else intro();
+      } else intro();
+    } else fillPanel();
   }
   function showChapterTransition(previous, next){
     const panel=document.getElementById('storyPanel');
-    document.getElementById('storyKicker').textContent='CHAPTER COMPLETE — '+previous.place;
+    const total=CHAPTERS.length;
+    document.getElementById('storyKicker').textContent='CHAPTER '+String(currentChapter).padStart(2,'0')+' / '+String(total).padStart(2,'0')+' CLEARED \u2014 '+previous.place;
     document.getElementById('storyTitle').textContent=next.title;
-    document.getElementById('storyBody').textContent='You found a way through. The mall changes around you. Somewhere beyond the next shutter, '+next.entity+' is waiting.';
+    document.getElementById('storyBody').textContent=next.bridge || ('You found a way through. The mall changes around you. Somewhere beyond the next shutter, '+next.entity+' is waiting.');
     document.getElementById('storyWhisper').textContent=next.whisper;
     panel.classList.add('on');
-    document.getElementById('storyContinue').textContent='ENTER CHAPTER '+String(currentChapter+1).padStart(2,'0');
+    document.getElementById('storyContinue').textContent='DESCEND TO CHAPTER '+String(currentChapter+1).padStart(2,'0');
     document.getElementById('storyContinue').onclick=()=>{
       panel.classList.remove('on');
       document.getElementById('storyContinue').textContent='ENTER THE MALL';
@@ -1584,6 +1708,9 @@ window.addEventListener('error', function(e){
     host.innerHTML='';
     ENTITY_FILES.forEach((entry,i)=>{
       const article=document.createElement('article'); article.className='loreEntry';
+      if(window.ENTITIES && window.ENTITIES.previewDataURL){
+        try{ const img=document.createElement('img'); img.className='entityArt'; img.alt=''; img.src=window.ENTITIES.previewDataURL(i); article.appendChild(img); }catch(e){}
+      }
       const h=document.createElement('h3'); h.textContent=String(i+1).padStart(2,'0')+' / '+entry[0];
       const p=document.createElement('p'); p.textContent=entry[1];
       const small=document.createElement('small'); small.textContent=entry[2];
@@ -1616,12 +1743,20 @@ window.addEventListener('error', function(e){
     ui._toastTO=setTimeout(()=>{ ui.toast.classList.remove('on'); }, ms||1200);
   }
 
-  function showEndPanel(escaped, seconds, noisePct, bangs, scene){
+  function showEndPanel(escaped, seconds, noisePct, bangs, scene, endingKind){
     ui.ui.classList.remove('scare');
     ui.endPanel.classList.add('on');
-    ui.endTitle.textContent = escaped ? 'YOU GOT OUT' : 'CAUGHT';
+    ui.endTitle.textContent = escaped
+      ? (endingKind==='kept' ? 'THE PROMISE KEPT' : (endingKind ? 'THE PROMISE BROKEN' : 'YOU GOT OUT'))
+      : 'CAUGHT';
     ui.endTitle.className = escaped ? '' : 'bad';
-    ui.endLine.textContent = escaped ? 'THE DOORS OPEN. THE BUILDING REMAINS AWAKE.' : 'THE MALL KEEPS YOU.';
+    ui.endLine.textContent = escaped
+      ? (endingKind==='kept'
+          ? 'YOU WALK OUT WITH HER NAME. THE MALL LOSES ONE, AND GOES DARK FLOOR BY FLOOR.'
+          : (endingKind
+              ? 'THE DOORS OPEN. THE TOY DEPARTMENT LIGHT STAYS ON BEHIND YOU.'
+              : 'THE DOORS OPEN. THE BUILDING REMAINS AWAKE.'))
+      : 'THE MALL KEEPS YOU. IT ALWAYS KEEPS THE ONES WHO PROMISED.';
     ui.endTime.textContent = M.fmt(seconds);
     ui.endStat.textContent = 'NOISE '+Math.round(noisePct)+'%   DISTURBANCES '+bangs;
     ui.board.innerHTML='';

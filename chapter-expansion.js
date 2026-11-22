@@ -1,22 +1,204 @@
-/* Chapter expansion layer for SILENT MALL. */
+/* Chapter expansion layer for SILENT MALL.
+   Seven chapters: extra floor dressing, per-entity behaviours, the final lockdown.
+   Cinematics live in story.js; this file only touches the playfield. */
 (()=>{
 'use strict';
-const captions=[
-'11:47 PM. THE SHUTTERS CLOSE. SOMETHING ANSWERS FROM THE DARK.',
-'THE SERVICE LIFT OPENS. THE EXIT SIGN POINTS THE WRONG WAY.',
-'CAMERA 04: A CHILD APPEARS IN A FRAME THAT HAS NOT BEEN RECORDED YET.',
-'THE MANAGER IS WAITING. THE BUILDING HAS SAVED YOUR PLACE.'
+
+/* Extra interior dressing per chapter (tile x, y, w, h). Short segments only:
+   they add structure without ever sealing a room off from the concourse. */
+const WALLS = [
+  [],
+  [[20,13,1,3],[24,12,1,2],[40,14,1,3],[43,10,1,3],[32,18,2,1]],
+  [[18,13,1,3],[23,12,1,2],[39,13,1,3],[45,14,1,3],[28,19,4,1],[15,9,3,1]],
+  [[12,6,1,4],[32,6,1,4],[51,6,1,4],[12,22,1,4],[32,22,1,4],[51,22,1,4]],
+  [[14,6,1,6],[26,6,1,6],[14,21,1,6],[26,21,1,6],[42,8,1,5],[54,8,1,5]],
+  [[20,12,1,5],[42,12,1,5],[27,11,7,1],[27,19,7,1],[31,12,1,2],[34,17,1,2]],
+  [[10,6,1,5],[34,6,1,5],[50,6,1,5],[10,22,1,5],[34,22,1,5],[50,22,1,5]]
 ];
-const css=`#chapterCinema{position:absolute;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;background:#020308;transition:opacity .8s}#chapterCinema.on{opacity:1;visibility:visible}#chapterCinema:before{content:"";position:absolute;inset:-15%;background:radial-gradient(ellipse at 52% 55%,#35444a44,transparent 48%),linear-gradient(90deg,#000e,transparent 35%,#000b);animation:mallCam 7s ease both}#chapterCinema:after{content:"";position:absolute;left:48%;top:-30%;width:34%;height:150%;transform:rotate(12deg);background:linear-gradient(90deg,transparent,#cde1dc29,transparent);filter:blur(9px);animation:mallBeam 6s ease both}#chapterCinema .figure{position:absolute;left:64%;bottom:14%;width:34px;height:100px;opacity:0;transform:translateX(40px) scale(.82);filter:drop-shadow(0 0 12px #bedcd033);animation:mallFigure 6.2s ease both}#chapterCinema .figure:before{content:"";position:absolute;left:10px;top:0;width:15px;height:18px;border-radius:48%;background:#030507;box-shadow:0 0 0 1px #dcece429}#chapterCinema .figure:after{content:"";position:absolute;left:5px;top:17px;width:25px;height:76px;background:linear-gradient(90deg,#020304,#10191b 48%,#020304);clip-path:polygon(25% 0,75% 0,100% 100%,0 100%)}#chapterCinema .bar{position:absolute;left:0;width:100%;height:0;background:#000;z-index:2;animation:mallBars 6s ease both}#chapterCinema .top{top:0}#chapterCinema .bottom{bottom:0}#chapterCinema .caption{position:absolute;left:7%;right:7%;bottom:19%;z-index:3;text-align:center;color:#e8e0cc;font:16px 'VT323',monospace;letter-spacing:2px;text-shadow:0 2px 8px #000;opacity:0;animation:mallCaption 6s ease both}#chapterCinema[data-chapter="2"]{background:radial-gradient(ellipse at 48% 68%,#42301e,#17100d 38%,#020204 78%)}#chapterCinema[data-chapter="3"]{background:radial-gradient(ellipse at 48% 42%,#243c43,#0a1119 42%,#020308 78%)}#chapterCinema[data-chapter="4"]{background:radial-gradient(ellipse at 52% 40%,#4a2421,#171014 42%,#020204 78%)}#chapterCinema[data-chapter="3"] .figure{animation-name:mallFlicker}@keyframes mallCam{from{transform:scale(1.2) translateX(5%);filter:blur(2px)}to{transform:scale(1) translateX(-3%);filter:blur(0)}}@keyframes mallBeam{0%{left:8%;opacity:0}18%{opacity:.9}80%{opacity:.45}100%{left:75%;opacity:0}}@keyframes mallFigure{0%,20%{opacity:0;transform:translateX(40px) scale(.82)}40%{opacity:.9}75%{opacity:.72;transform:translateX(-22px) scale(1.03)}100%{opacity:0;transform:translateX(-48px) scale(1.08)}}@keyframes mallFlicker{0%,32%,38%,52%,58%,100%{opacity:0}34%,36%,54%,56%{opacity:.9;transform:translateX(-8px) scale(1.05)}}@keyframes mallBars{0%,8%{height:0}18%,85%{height:12%}100%{height:0}}@keyframes mallCaption{0%,18%{opacity:0;transform:translateY(8px)}28%,76%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-5px)}}@media(prefers-reduced-motion:reduce){#chapterCinema *{animation-duration:.01ms!important}}`;
-document.head.insertAdjacentHTML('beforeend','<style>'+css+'</style>');
-const cinema=document.createElement('div');cinema.id='chapterCinema';cinema.innerHTML='<div class="bar top"></div><div class="bar bottom"></div><div class="figure"></div><div class="caption"></div>';
-const stage=document.getElementById('stage');if(stage)stage.insertBefore(cinema,document.getElementById('ui'));
-const index=s=>{const t=s.chapter?.title||'';return t.includes('FOOD COURT')?2:t.includes('CHILDREN')?3:t.includes('HEART')?4:1};
-function paint(s,n){s.__chapterPainted=null;const patch=[[[7,9,13,3],[16,9,6,3],[42,9,13,3]],[[7,8,13,4],[24,8,15,4],[43,8,12,4],[7,20,13,3],[43,20,12,3]],[[7,7,13,5],[23,7,17,5],[43,7,13,5],[7,20,15,3],[25,20,15,3],[43,20,13,3]],[[7,8,12,4],[22,8,19,4],[45,8,12,4],[22,20,19,3],[45,20,12,3]]][n-1];const tint=[0x7f9b91,0x8b7355,0x6b789d,0x9b554c][n-1];patch.forEach(p=>s.add.rectangle((p[0]+p[2]/2)*16,(p[1]+p[3]/2)*16,p[2]*16,p[3]*16,tint,.12).setDepth(1));
-const walls=[[],[[20,13,1,3],[24,12,1,2],[40,14,1,3],[43,10,1,3],[32,18,2,1]],[[18,13,1,3],[23,12,1,2],[39,13,1,3],[45,14,1,3],[28,19,4,1],[15,9,3,1]],[[20,12,1,5],[42,12,1,5],[27,11,7,1],[27,19,7,1],[31,12,1,2],[34,17,1,2]]][n-1];walls.forEach(p=>{s.addSolid(p[0]*16,p[1]*16,p[2]*16,p[3]*16);for(let y=p[1];y<p[1]+p[3];y++)for(let x=p[0];x<p[0]+p[2];x++)if(s.blocked[y])s.blocked[y][x]=true;});
-cinema.dataset.chapter=n;cinema.querySelector('.caption').textContent=captions[n-1];cinema.classList.remove('on');void cinema.offsetWidth;cinema.classList.add('on');clearTimeout(cinema.__hide);cinema.__hide=setTimeout(()=>cinema.classList.remove('on'),6800);s.__mallPulse=s.time.now+9000;s.__ability=s.time.now+7000;s.__phase=0;s.__boss=false;s.__painted=n;
+
+/* Soft floor washes so each chapter reads as its own place. */
+const PATCHES = [
+  [[[7,9,13,3],[16,9,6,3],[42,9,13,3]], 0x7f9b91],
+  [[[7,8,13,4],[24,8,15,4],[43,8,12,4],[7,20,13,3],[43,20,12,3]], 0x8b7355],
+  [[[7,7,13,5],[23,7,17,5],[43,7,13,5],[7,20,15,3],[25,20,15,3],[43,20,13,3]], 0x6b789d],
+  [[[6,6,15,7],[26,6,13,7],[44,6,15,7],[6,19,15,7],[26,19,13,7],[44,19,15,7]], 0x8a7b62],
+  [[[8,6,23,7],[40,7,19,6],[8,19,23,7],[40,19,19,7]], 0x8c4f45],
+  [[[7,8,12,4],[22,8,19,4],[45,8,12,4],[22,20,19,3],[45,20,12,3]], 0x9b554c],
+  [[[4,6,17,7],[24,6,17,7],[44,6,18,7],[4,19,17,7],[24,19,17,7],[44,19,18,7]], 0x8a8fb0]
+];
+
+function chapterIndex(scene){
+  const M = window.MALL;
+  if(M && typeof M.CHAPTER_INDEX === 'number') return M.CHAPTER_INDEX;
+  const t = (scene && scene.chapter && scene.chapter.title) || '';
+  if(t.includes('FOOD COURT')) return 1;
+  if(t.includes('CHILDREN')) return 2;
+  if(t.includes('LOST')) return 3;
+  if(t.includes('SCREENING')) return 4;
+  if(t.includes('HEART')) return 5;
+  if(t.includes('ROOF')) return 6;
+  return 0;
 }
-function install(s){if(!s||s.__expansionInstalled)return;s.__expansionInstalled=true;s.toast=(m,ms)=>{const e=document.getElementById('toast');if(!e)return;e.textContent=m;e.classList.add('on');clearTimeout(s.__toast);s.__toast=setTimeout(()=>e.classList.remove('on'),ms||1200)};const create=s.create.bind(s);s.create=function(){this.__painted=0;create();paint(this,index(this))};const update=s.updateHunter.bind(s);s.updateHunter=function(dt){const n=index(this),now=this.time.now,h=this.hunter;if(n===2&&h&&now>this.__ability&&h.state!=='hunt'){this.__ability=now+11500;h.target={x:(Math.random()<.5?13:47)*16,y:(Math.random()<.5?9:21)*16};h.state='investigate';h.nextStep=now+100;this.toast('THE USHER HAS MOVED THE EXIT SIGN.',1800)}if(n===3&&h&&now>this.__ability&&h.state!=='hunt'&&h.state!=='dormant'){this.__ability=now+13500;h.state='dormant';this.__phase=now+1700;this.hunterSprite.setAlpha(.08);this.chromaBurst=.45;this.flash(.13,260);this.toast('CAMERA 04: SUBJECT MISSING.',1600)}if(n===3&&h&&h.state==='dormant'&&this.__phase&&now>=this.__phase){const x=Math.max(2,Math.min(61,Math.floor((this.player.x-this.faceX*112)/16))),y=Math.max(2,Math.min(27,Math.floor((this.player.y-this.faceY*112)/16)));if(this.blocked[y]&&!this.blocked[y][x]){h.x=x*16+8;h.y=y*16+8}h.state='idle';h.target={x:this.player.x,y:this.player.y};h.nextStep=now+300;this.__phase=0;this.hunterSprite.setAlpha(.8)}if(n===4&&this.__boss&&h){h.state='hunt';h.huntUntil=now+1000;h.alert=1;h.target={x:this.player.x,y:this.player.y};h.nextStep=Math.min(h.nextStep,now+110)}if(this.__mallPulse&&now>this.__mallPulse&&!this.ended){this.__mallPulse=now+16500;this.chromaBurst=Math.max(this.chromaBurst||0,.24);this.flash(.055,320);this.cameras.main.shake(180,.0015)}update(dt)};const open=s.openShutter.bind(s);s.openShutter=function(){open();if(index(this)===4&&!this.__boss){this.__boss=true;this.hunter.state='hunt';this.hunter.alert=1;this.hunter.huntUntil=this.time.now+30000;this.toast('BOSS ENCOUNTER — THE NIGHT MANAGER.',2800);this.cameras.main.shake(420,.008);this.flash(.22,420)}};paint(s,index(s))}
-function watch(){if(window.__mall&&!window.__mall.__expansionInstalled)install(window.__mall);if(!window.__mall||!window.__mall.__expansionInstalled)setTimeout(watch,180)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);else watch();setTimeout(watch,400);
+
+function paint(scene, n){
+  if(!scene || !scene.add) return;
+  scene.__painted = n;
+
+  const wash = PATCHES[n] || [];
+  const tint = wash[1] !== undefined ? wash[1] : 0x7f9b91;
+  const rects = wash[0] || [];
+  rects.forEach(p=>{
+    scene.add.rectangle((p[0]+p[2]/2)*16, (p[1]+p[3]/2)*16, p[2]*16, p[3]*16, tint, .12).setDepth(1);
+  });
+
+  const walls = WALLS[n] || [];
+  walls.forEach(p=>{
+    scene.addSolid(p[0]*16, p[1]*16, p[2]*16, p[3]*16);
+    for(let y=p[1]; y<p[1]+p[3]; y++){
+      for(let x=p[0]; x<p[0]+p[2]; x++){
+        if(scene.blocked && scene.blocked[y]) scene.blocked[y][x] = true;
+      }
+    }
+  });
+
+  if(window.ENTITIES && window.ENTITIES.apply) window.ENTITIES.apply(scene, n);
+
+  scene.__mallPulse = scene.time.now + 9000;
+  scene.__ability = scene.time.now + 7000;
+  scene.__phase = 0;
+  scene.__boss = false;
+}
+
+function install(scene){
+  if(!scene || scene.__expansionInstalled) return;
+  scene.__expansionInstalled = true;
+
+  scene.toast = (m, ms)=>{
+    const e = document.getElementById('toast');
+    if(!e) return;
+    e.textContent = m;
+    e.classList.add('on');
+    clearTimeout(scene.__toast);
+    scene.__toast = setTimeout(()=>e.classList.remove('on'), ms || 1200);
+  };
+
+  const create = scene.create.bind(scene);
+  scene.create = function(){
+    this.__painted = -1;
+    create();
+    paint(this, chapterIndex(this));
+  };
+
+  const updateHunter = scene.updateHunter.bind(scene);
+  scene.updateHunter = function(dt){
+    const n = chapterIndex(this);
+    const now = this.time.now;
+    const h = this.hunter;
+
+    /* 02 — THE USHER: moves the signs, pulls the hunter toward a false exit */
+    if(n===1 && h && now>this.__ability && h.state!=='hunt'){
+      this.__ability = now + 11500;
+      h.target = { x:(Math.random()<.5?13:47)*16, y:(Math.random()<.5?9:21)*16 };
+      h.state = 'investigate';
+      h.nextStep = now + 100;
+      this.toast('THE USHER HAS MOVED THE EXIT SIGN.', 1800);
+    }
+
+    /* 03 — THE STATIC CHILD: drops out of frame, returns somewhere else */
+    if(n===2 && h && now>this.__ability && h.state!=='hunt' && h.state!=='dormant'){
+      this.__ability = now + 13500;
+      h.state = 'dormant';
+      this.__phase = now + 1700;
+      if(this.hunterSprite) this.hunterSprite.setAlpha(.08);
+      this.chromaBurst = .45;
+      this.flash(.13, 260);
+      this.toast('CAMERA 04: SUBJECT MISSING.', 1600);
+    }
+    if(n===2 && h && h.state==='dormant' && this.__phase && now>=this.__phase){
+      const x = Math.max(2, Math.min(61, Math.floor((this.player.x - this.faceX*112)/16)));
+      const y = Math.max(2, Math.min(27, Math.floor((this.player.y - this.faceY*112)/16)));
+      if(this.blocked[y] && !this.blocked[y][x]){ h.x = x*16+8; h.y = y*16+8; }
+      h.state = 'idle';
+      h.target = { x:this.player.x, y:this.player.y };
+      h.nextStep = now + 300;
+      this.__phase = 0;
+      if(this.hunterSprite) this.hunterSprite.setAlpha(.8);
+    }
+
+    /* 04 — THE COLLECTOR: files you, and re-shelves the way out */
+    if(n===3 && h && now>this.__ability && h.state!=='hunt'){
+      this.__ability = now + 12000;
+      h.target = { x:this.keyPos.x*16, y:this.keyPos.y*16 };
+      h.state = 'investigate';
+      h.nextStep = now + 100;
+      this.chromaBurst = Math.max(this.chromaBurst||0, .22);
+      this.flash(.07, 240);
+      this.toast('SHE HAS FILED YOU UNDER "PENDING".', 1900);
+    }
+
+    /* 05 — THE PROJECTIONIST: floods the room with your own footage */
+    if(n===4 && h && now>this.__ability && h.state!=='hunt'){
+      this.__ability = now + 12500;
+      this.flash(.2, 420);
+      this.cameras.main.shake(260, .0035);
+      this.chromaBurst = .5;
+      if(this.wakeNear) this.wakeNear(this.player.x, this.player.y, 190, 40);
+      this.toast('THE PROJECTOR IS PLAYING YOUR NIGHT.', 1900);
+    }
+
+    /* 06 — THE NIGHT MANAGER: the shutter wakes him and he does not stop */
+    if(n===5 && this.__boss && h){
+      h.state = 'hunt';
+      h.huntUntil = now + 1000;
+      h.alert = 1;
+      h.target = { x:this.player.x, y:this.player.y };
+      h.nextStep = Math.min(h.nextStep, now + 110);
+    }
+
+    /* 07 — THE MALL: the building closes in, floor by floor */
+    if(n===6 && h && now>this.__ability && h.state!=='hunt'){
+      this.__ability = now + 11000;
+      if(this.wakeNear) this.wakeNear(this.player.x, this.player.y, 240, 55);
+      if(this.hunterHear) this.hunterHear(this.player.x, this.player.y, .8);
+      this.toast('THE MALL IS TURNING OFF THE LIGHTS.', 1700);
+    }
+
+    /* the building breathes, in every chapter */
+    if(this.__mallPulse && now>this.__mallPulse && !this.ended){
+      this.__mallPulse = now + 16500;
+      this.chromaBurst = Math.max(this.chromaBurst||0, .24);
+      this.flash(.055, 320);
+      this.cameras.main.shake(180, .0015);
+    }
+    updateHunter(dt);
+  };
+
+  const openShutter = scene.openShutter.bind(scene);
+  scene.openShutter = function(){
+    openShutter();
+    if(chapterIndex(this)===5 && !this.__boss){
+      this.__boss = true;
+      this.hunter.state = 'hunt';
+      this.hunter.alert = 1;
+      this.hunter.huntUntil = this.time.now + 30000;
+      this.toast('BOSS ENCOUNTER — THE NIGHT MANAGER.', 2800);
+      this.cameras.main.shake(420, .008);
+      this.flash(.22, 420);
+    }
+    if(chapterIndex(this)===6){
+      this.toast('THE HATCH IS OPEN. RUN.', 2400);
+      this.cameras.main.shake(320, .005);
+    }
+  };
+
+  paint(scene, chapterIndex(scene));
+}
+
+function watch(){
+  if(window.__mall && !window.__mall.__expansionInstalled) install(window.__mall);
+  if(!window.__mall || !window.__mall.__expansionInstalled) setTimeout(watch, 180);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+setTimeout(watch, 400);
+
 })();
